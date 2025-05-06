@@ -1,4 +1,4 @@
-package com.example.androidauto;
+package com.kuackmedia.androidauto;
 
 import android.content.Intent;
 import android.os.Bundle;
