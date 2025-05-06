@@ -10,6 +10,7 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import androidx.media.MediaBrowserServiceCompat;
 import java.util.ArrayList;
 import java.util.List;
+import androidx.media.utils.MediaConstants;
 
 public class AndroidAutoService extends MediaBrowserServiceCompat {
 
@@ -48,8 +49,10 @@ public class AndroidAutoService extends MediaBrowserServiceCompat {
     @Override
     public BrowserRoot onGetRoot(String clientPackageName, int clientUid, Bundle rootHints) {
         Bundle extras = new Bundle();
-        extras.putBoolean(BrowserRoot.EXTRA_SEARCH_SUPPORTED, true);
+        //extras.putBoolean(BrowserRoot.EXTRA_SEARCH_SUPPORTED, true);
+        extras.putBoolean(MediaConstants.BROWSER_SERVICE_EXTRAS_KEY_SEARCH_SUPPORTED, true);
         return new BrowserRoot(ROOT_ID, extras);
+
     }
 
     @Override
