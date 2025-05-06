@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="cordova-plugin-android-auto" version="0.1.0"
+        xmlns="http://apache.org/cordova/ns/plugins/1.0">
+
+    <name>AndroidAuto</name>
+    <description>Plugin básico Android Auto con MediaBrowserServiceCompat</description>
+    <license>MIT</license>
+
+    <js-module src="www/AndroidAuto.js" name="AndroidAuto">
+        <clobbers target="cordova.plugins.AndroidAuto" />
+    </js-module>
+
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="AndroidAutoPlugin">
+                <param name="android-package" value="com.kuackmedia.androidauto.AndroidAutoPlugin" />
+            </feature>
+        </config-file>
+
+        <source-file src="src/android/AndroidAutoPlugin.java" target-dir="src/com/kuackmedia/androidauto" />
+        <source-file src="src/android/AndroidAutoService.java" target-dir="src/com/kuackmedia/androidauto" />
+
+        <framework src="androidx.media:media:1.7.0"/>
+    </platform>
+    <hook src="hooks/android/after_prepare/update_manifest.js" type="after_prepare"/>
+
+</plugin>
