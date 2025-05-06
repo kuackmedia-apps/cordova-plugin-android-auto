@@ -1,0 +1,22 @@
+{
+  "name": "cordova-plugin-android-auto",
+  "version": "0.1.0",
+  "description": "Plugin básico Android Auto con MediaBrowserServiceCompat para Cordova",
+  "cordova": {
+    "id": "cordova-plugin-android-auto",
+    "platforms": [
+      "android"
+    ]
+  },
+  "keywords": [
+    "cordova",
+    "android-auto",
+    "cordova-android",
+    "mediabrowserservicecompat"
+  ],
+  "author": "Kuackmedia",
+  "license": "MIT",
+  "dependencies": {
+    "xml2js": "^0.6.2"
+  }
+}
