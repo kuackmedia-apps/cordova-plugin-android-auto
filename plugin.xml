@@ -17,6 +17,8 @@
             </feature>
         </config-file>
 
+        <resource-file src="src/android/res/xml/automotive_app_desc.xml"
+                       target="app/src/main/res/xml/automotive_app_desc.xml" />
         <source-file src="src/android/AndroidAutoPlugin.java" target-dir="src/com/kuackmedia/androidauto" />
         <source-file src="src/android/AndroidAutoService.java" target-dir="src/com/kuackmedia/androidauto" />
 
