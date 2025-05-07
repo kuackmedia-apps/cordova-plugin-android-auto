@@ -26,6 +26,8 @@
                      target-dir="src/com/kuackmedia/androidauto/utils" />
         <source-file src="src/android/api/KuackApiClient.java"
                      target-dir="src/com/kuackmedia/androidauto/api" />
+        <source-file src="src/android/models/MediaItemFactory.java"
+                     target-dir="src/com/kuackmedia/androidauto/models" />
 
         <framework src="androidx.media:media:1.7.0"/>
     </platform>
