@@ -20,6 +20,13 @@
         <source-file src="src/android/AndroidAutoPlugin.java" target-dir="src/com/kuackmedia/androidauto" />
         <source-file src="src/android/AndroidAutoService.java" target-dir="src/com/kuackmedia/androidauto" />
 
+        <source-file src="src/android/player/PlaybackManager.java" target-dir="src/com/kuackmedia/androidauto/player" />
+        <source-file src="src/android/player/QueueManager.java" target-dir="src/com/kuackmedia/androidauto/player" />
+        <source-file src="src/android/utils/LocalStorageUtils.java"
+                     target-dir="src/com/kuackmedia/androidauto/utils" />
+        <source-file src="src/android/api/KuackApiClient.java"
+                     target-dir="src/com/kuackmedia/androidauto/api" />
+
         <framework src="androidx.media:media:1.7.0"/>
     </platform>
     <hook src="hooks/android/after_prepare/update_manifest.js" type="after_prepare"/>
