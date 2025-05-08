@@ -1,114 +1,97 @@
-package com.kuackmedia.androidauto.api;
+package com.kuackmedia.androidauto.models;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.util.Log;
+import android.net.Uri;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaDescriptionCompat;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
-import okhttp3.*;
+public class MediaItemFactory {
 
-public class KuackApiClient {
+    public static MediaBrowserCompat.MediaItem fromJson(JSONObject json) throws JSONException {
+        String itemType = json.optString("itemType", "track");
+        String id = String.valueOf(json.optLong("id"));
+        String title;
+        String subtitle;
+        String imageUrl = null;
+        int flags;
 
-    private static final String TAG = "KuackApiClient";
+        switch (itemType) {
+            case "playlist":
+                title = json.optString("name");
+                subtitle = json.optJSONObject("curator") != null ? json.getJSONObject("curator").optString("name") : "Playlist";
+                flags = MediaBrowserCompat.MediaItem.FLAG_BROWSABLE;
+                imageUrl = getImageUrl(json.optJSONArray("images"));
+                break;
 
-    private static final String PREFS_NAME = "NativeStorage";
-    private static final String AT_EXP_TIME_KEY = "at_expire_time";
-    private static final String REFRESH_TOKEN_KEY = "RefreshToken";
-    private static final String ACCESS_TOKEN_KEY = "access_token";
-    private static final String APP_CODE_KEY = "AppCode";
+            case "album":
+                title = json.optString("title");
+                subtitle = getArtistsNames(json.optJSONArray("artists"));
+                flags = MediaBrowserCompat.MediaItem.FLAG_BROWSABLE;
+                imageUrl = getImageUrl(json.optJSONArray("images"));
+                break;
 
-    private final SharedPreferences prefs;
-    private final OkHttpClient client;
+            case "artist":
+                title = json.optString("name");
+                subtitle = "Artist";
+                flags = MediaBrowserCompat.MediaItem.FLAG_BROWSABLE;
+                imageUrl = getImageUrl(json.optJSONArray("images"));
+                break;
 
-    private final String baseUrl = "https://api.yourdomain.com"; // Usa tu URL real
+            case "tag":
+                title = json.optString("name");
+                subtitle = json.optString("description", "Tag");
+                flags = MediaBrowserCompat.MediaItem.FLAG_BROWSABLE;
+                imageUrl = getImageUrl(json.optJSONArray("images"));
+                break;
 
-    public KuackApiClient(Context context) {
-        prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        client = new OkHttpClient();
-    }
-
-    private boolean shouldRenewAt() {
-        long expireTime = prefs.getLong(AT_EXP_TIME_KEY, 0);
-        long now = System.currentTimeMillis();
-        return expireTime == 0 || now >= expireTime;
-    }
-
-    public String getValidAccessToken() {
-        if (shouldRenewAt()) {
-            return renewAccessToken();
-        } else {
-            return prefs.getString(ACCESS_TOKEN_KEY, null);
+            case "track":
+            default:
+                title = json.optString("name");
+                subtitle = getArtistsNames(json.optJSONArray("artists"));
+                flags = MediaBrowserCompat.MediaItem.FLAG_PLAYABLE;
+                JSONObject album = json.optJSONObject("album");
+                if (album != null) {
+                    imageUrl = getImageUrl(album.optJSONArray("images"));
+                }
+                break;
         }
+
+        MediaDescriptionCompat.Builder descriptionBuilder = new MediaDescriptionCompat.Builder()
+                .setMediaId(id)
+                .setTitle(title)
+                .setSubtitle(subtitle);
+
+        if (imageUrl != null) {
+            descriptionBuilder.setIconUri(Uri.parse(imageUrl));
+        }
+
+        return new MediaBrowserCompat.MediaItem(descriptionBuilder.build(), flags);
     }
 
-    private String renewAccessToken() {
-        try {
-            String refreshToken = prefs.getString(REFRESH_TOKEN_KEY, null);
-            String appCode = prefs.getString(APP_CODE_KEY, null);
-
-            if (refreshToken == null || appCode == null) {
-                Log.e(TAG, "Missing refreshToken or appCode");
-                return null;
+    private static String getImageUrl(JSONArray images) {
+        if (images != null && images.length() > 0) {
+            JSONObject image = images.optJSONObject(images.length() - 1);
+            if (image != null) {
+                return image.optString("url");
             }
-
-            JSONObject jsonBody = new JSONObject();
-            jsonBody.put("grantType", "refresh_token");
-            jsonBody.put("token", refreshToken);
-
-            RequestBody body = RequestBody.create(jsonBody.toString(), MediaType.parse("application/json"));
-
-            HttpUrl url = HttpUrl.parse(baseUrl + "/auth/token")
-                .newBuilder()
-                .addQueryParameter("renew_refresh", "1") // Opcional según tu lógica original
-                .build();
-
-            Request request = new Request.Builder()
-                .url(url)
-                .addHeader("Content-Type", "application/json")
-                .addHeader("X-KUACK-APP", appCode)
-                .post(body)
-                .build();
-
-            Response response = client.newCall(request).execute();
-
-            if (!response.isSuccessful()) {
-                Log.e(TAG, "HTTP Error: " + response.code());
-                return null;
-            }
-
-            if (response.code() == 204) {
-                Log.i(TAG, "No Content (204), no action required.");
-                return null;
-            }
-
-            String responseBody = response.body().string();
-            JSONObject responseData = new JSONObject(responseBody);
-
-            String newAccessToken = responseData.getString("accessToken");
-            long expiresIn = responseData.getLong("expiresIn");
-
-            long newExpireTime = System.currentTimeMillis() + (expiresIn * 1000);
-
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putString(ACCESS_TOKEN_KEY, newAccessToken);
-            editor.putLong(AT_EXP_TIME_KEY, newExpireTime);
-
-            if (responseData.has("refreshToken")) {
-                String newRefreshToken = responseData.getString("refreshToken");
-                editor.putString(REFRESH_TOKEN_KEY, newRefreshToken);
-                Log.i(TAG, "Refresh token updated.");
-            }
-
-            editor.apply();
-
-            Log.i(TAG, "Access token successfully renewed.");
-
-            return newAccessToken;
-
-        } catch (Exception e) {
-            Log.e(TAG, "Error renewing access token", e);
-            return null;
         }
+        return null;
+    }
+
+    private static String getArtistsNames(JSONArray artists) {
+        if (artists == null) return "Unknown Artist";
+
+        StringBuilder names = new StringBuilder();
+        for (int i = 0; i < artists.length(); i++) {
+            JSONObject artist = artists.optJSONObject(i);
+            if (artist != null) {
+                names.append(artist.optString("name"));
+                if (i < artists.length() - 1) names.append(", ");
+            }
+        }
+        return names.toString();
     }
 }

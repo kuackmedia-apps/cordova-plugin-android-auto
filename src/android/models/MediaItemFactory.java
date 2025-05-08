@@ -5,11 +5,12 @@ import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class MediaItemFactory {
 
-    public static MediaBrowserCompat.MediaItem fromJson(JSONObject json) {
+    public static MediaBrowserCompat.MediaItem fromJson(JSONObject json) throws JSONException {
         String itemType = json.optString("itemType", "track");
         String id = String.valueOf(json.optLong("id"));
         String title;

@@ -10,6 +10,11 @@ import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import androidx.media.MediaBrowserServiceCompat;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import androidx.media.utils.MediaConstants;
@@ -17,6 +22,12 @@ import android.content.SharedPreferences;
 import android.app.Activity;
 import android.util.Log;
 import android.media.AudioAttributes;
+import com.kuackmedia.androidauto.utils.LocalStorageUtils;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONArray;
+import java.util.List;
 
 public class AndroidAutoService extends MediaBrowserServiceCompat {
 
@@ -34,13 +45,56 @@ public class AndroidAutoService extends MediaBrowserServiceCompat {
         String refreshToken = prefs.getString("REFRESH_TOKEN_KEY", null);
         String accessToken = prefs.getString("AT_TOKEN_KEY", null);
         String currentTrack = prefs.getString("current_track", null);
-        String playlistItemsQueue = prefs.getString("playlist_itmes", null);
+        //remove quotes from currenTrack
+        if (currentTrack != null) {
+            currentTrack = currentTrack.replace("\"", "");
+        }
         String playlistData = prefs.getString("playlist_data", null);
+        String playlistItemsQueueString = "";
+        JSONObject currentTrackJsonObject = null;
+
+        try {
+            File jsonFile = new File(getApplicationContext().getFilesDir(), "playlist_itmes");
+            playlistItemsQueueString = new String(Files.readAllBytes(jsonFile.toPath()), StandardCharsets.UTF_8);
+            List<JSONObject> playlistDataObject = LocalStorageUtils.parseEscapedJsonArray(playlistItemsQueueString);
+            for (JSONObject obj : playlistDataObject) {
+                JSONObject data = obj.getJSONObject("data");
+                String name = data.getString("name");
+                String idAlbumTrack = data.getString("idAlbumTrack");
+                if (idAlbumTrack.equals(String.valueOf(currentTrack))) {
+                    Log.i(TAG, "Hay current track: " + name + idAlbumTrack);
+                    currentTrackJsonObject = data;
+                }
+
+                Log.i(TAG, "Nombre del track: " + name);
+                Log.i(TAG, "IdAlbumTrack del track: " + idAlbumTrack + " - " + currentTrack);
+            }
+        } catch (JSONException e) {
+            Log.i(TAG, "Error parsing: " + e.getMessage());
+        } catch (IOException e) {
+            Log.i(TAG, "Error parsing: IOException" + e.getMessage());
+            throw new RuntimeException(e);
+        }
+        if (currentTrackJsonObject != null) {
+            try {
+                String name = currentTrackJsonObject.getString("name");
+              //  String artist = currentTrackJsonObject.getString("artist");
+              //  String album = currentTrackJsonObject.getString("album");
+              //  String imageUrl = currentTrackJsonObject.getString("imageUrl");
+              //  String trackUrl = currentTrackJsonObject.getString("trackUrl");
+
+                Log.i(TAG, "Current Track Nombre del track: " + name);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            //Log.i(TAG, "currentTrack: " + currentTrackJsonObject.getString("name"));
+        }
+        Log.i(TAG, "playlistItemsQueueString: " + playlistItemsQueueString);
+        Log.i(TAG, "Longitud JSON: " + playlistItemsQueueString.length());
 
         Log.i(TAG, "RefreshToken: " + refreshToken);
         Log.i(TAG, "AccessToken: " + accessToken);
         Log.i(TAG, "currentTrack: " + currentTrack);
-        Log.i(TAG, "playListItems: " + playlistItemsQueue);
         Log.i(TAG, "playlistData: " + playlistData);
         //JSON parse currentTrack
 

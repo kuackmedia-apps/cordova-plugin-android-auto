@@ -4,7 +4,14 @@ import android.content.Context;
 import android.net.Uri;
 import android.support.v4.media.MediaBrowserCompat;
 import android.util.Log;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONArray;
+import java.util.ArrayList;
+import java.util.List;
 import java.io.File;
+import org.json.JSONTokener;
 
 public class LocalStorageUtils {
 
@@ -57,5 +64,41 @@ public class LocalStorageUtils {
             Log.i(TAG, "Using remote track: " + remoteTrackUri);
             return remoteTrackUri;
         }
+    }
+    // Recibe un JSon stringify y devuelve un JSON object
+    public static JSONObject parseJson(String jsonString) {
+        try {
+            return new JSONObject(jsonString);
+        } catch (JSONException e) {
+            Log.e(TAG, "Error parsing JSON: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Convierte un string JSON en un List de JSONObject.
+     *
+     * @param jsonString el string que representa el JSON Array.
+     * @return una lista con los objetos JSON del array.
+     * @throws JSONException si el string no es un JSON válido.
+     */
+    public static List<JSONObject> parseEscapedJsonArray(String escapedJsonString) throws JSONException {
+        // Remueve escapes de comillas dobles y comillas externas adicionales
+        String cleanedJson = escapedJsonString.replace("\\\"", "\"").trim();
+
+        // Si comienza y termina con comillas extra, quítalas
+        if (cleanedJson.startsWith("\"") && cleanedJson.endsWith("\"")) {
+            cleanedJson = cleanedJson.substring(1, cleanedJson.length() - 1);
+        }
+
+        // Ahora sí parsea correctamente
+        JSONArray jsonArray = new JSONArray(cleanedJson);
+        List<JSONObject> jsonObjects = new ArrayList<>();
+
+        for (int i = 0; i < jsonArray.length(); i++) {
+            jsonObjects.add(jsonArray.getJSONObject(i));
+        }
+
+        return jsonObjects;
     }
 }
